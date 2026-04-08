@@ -8,7 +8,7 @@ Memoly is a greenfield project. The codebase has not been scaffolded yet — no 
 
 ## Architecture
 
-**Modular Monolith (Evently pattern)** — each bounded context is an independent module with 5 projects following Clean Architecture internally.
+**Modular Monolith** — each bounded context is an independent module with 5 projects following Clean Architecture internally.
 
 ### Solution Structure
 
@@ -123,25 +123,29 @@ app.Map{Name}Module();
 
 - **Runtime**: .NET 10, C# 14
 - **Orchestration**: .NET Aspire (AppHost + ServiceDefaults in `src/Aspire/`)
+- **Reverse Proxy**: Traefik
 - **API**: ASP.NET Core Minimal APIs with OpenAPI
 - **ORM**: EF Core with code-first migrations (schema-per-module)
 - **API Docs**: Scalar
-- **Logging**: Serilog (two-stage bootstrap, structured logging)
+- **Logging**: Serilog (two-stage bootstrap, structured logging) + Seq
 - **Resilience**: Polly v8 pipelines
-- **Event Bus**: In-process via `System.Threading.Channels` (migrate to Wolverine/MassTransit when needed)
-- **Testing**: xUnit v3, WebApplicationFactory, Testcontainers, Verify
+- **Event Bus**: MassTransit (RabbitMQ transport)
+- **CQRS**: MediatR
+- **Validation**: FluentValidation
+- **Mapping**: Mapster
+- **Authentication**: OpenIddict
+- **Testing**: xUnit v3, Fluent Assertions, Moq, WebApplicationFactory, Testcontainers
+- **Code Quality**: SonarQube
 - **Solution format**: `.slnx`
 - **Package management**: Central (`Directory.Packages.props`)
 
 ### Frontend
 
 - **Framework**: React + Vite (located at `src/Frontend/memoly-web/`)
-- **Routing**: React Router v7
-- **API State**: TanStack Query v5
-- **Forms**: React Hook Form + Zod
-- **Styling**: Tailwind CSS v4
-- **API Client**: `openapi-typescript` (auto-generated from OpenAPI spec)
-- **QR Code**: `qrcode.react`
+- **State Management**: Zustand
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide Icons
+- **Styling**: Tailwind CSS
 
 ## Build & Run Commands
 

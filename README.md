@@ -23,19 +23,36 @@ Turn every lifeless object into a living diary page with a smart management syst
 
 ## Tech Stack
 
-| Component     | Technology                                      |
-| ------------- | ----------------------------------------------- |
-| Runtime       | .NET 10, C# 14                                  |
-| Orchestration | .NET Aspire                                     |
-| API           | ASP.NET Core Minimal APIs                       |
-| ORM           | EF Core                                         |
-| API Docs      | Scalar                                          |
-| Logging       | Serilog                                         |
-| Resilience    | Polly v8                                        |
-| Event Bus     | In-process (System.Threading.Channels)          |
-| Testing       | xUnit v3, WebApplicationFactory, Testcontainers |
-| Architecture  | Modular Monolith (Evently pattern)              |
-| Frontend      | React + Vite, TanStack Query, Tailwind CSS v4   |
+### Backend
+
+| Component      | Technology                                           |
+| -------------- | ---------------------------------------------------- |
+| Runtime        | .NET 10, C# 14                                       |
+| Orchestration  | .NET Aspire                                          |
+| Reverse Proxy  | Traefik                                              |
+| API            | ASP.NET Core Minimal APIs                            |
+| ORM            | EF Core                                              |
+| API Docs       | Scalar                                               |
+| Logging        | Serilog + Seq                                        |
+| Resilience     | Polly v8                                             |
+| Event Bus      | MassTransit (RabbitMQ)                               |
+| CQRS           | MediatR                                              |
+| Validation     | FluentValidation                                     |
+| Mapping        | Mapster                                              |
+| Authentication | OpenIddict                                           |
+| Testing        | xUnit v3, Fluent Assertions, Moq, Testcontainers    |
+| Code Quality   | SonarQube                                            |
+| Architecture   | Modular Monolith                                     |
+
+### Frontend
+
+| Component     | Technology          |
+| ------------- | ------------------- |
+| Framework     | React + Vite        |
+| State         | Zustand             |
+| UI Components | shadcn/ui           |
+| Icons         | Lucide Icons        |
+| Styling       | Tailwind CSS        |
 
 ## Getting Started
 

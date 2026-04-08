@@ -1,7 +1,7 @@
 ---
 name: modular-monolith
 description: >
-  Modular Monolithic Architecture for .NET applications following the Evently pattern.
+  Modular Monolithic Architecture for .NET applications.
   Covers module isolation with per-module layered projects (Application, Domain,
   Infrastructure, Presentation, IntegrationEvents), schema-per-module database isolation,
   inter-module communication via integration events, a layered Common shared kernel,
@@ -28,39 +28,39 @@ description: >
 ### Solution Structure
 
 ```
-Evently/
+{ProjectRoot}/
 ├── Solution Items/
 │   ├── .editorconfig
 │   └── Directory.Build.props
 ├── src/
 │   ├── API/
-│   │   └── Evently.Api/                        # Composition root — wires modules, no business logic
+│   │   └── {ProjectRoot}.Api/                        # Composition root — wires modules, no business logic
 │   │       Program.cs
 │   │       Modules/
 │   │         ModuleExtensions.cs               # Extension methods to register each module
 │   │       appsettings.json
 │   │
 │   ├── Common/
-│   │   ├── Evently.Common.Domain/              # Shared domain primitives
+│   │   ├── {ProjectRoot}.Common.Domain/              # Shared domain primitives
 │   │   │   EventId.cs                          # Strongly-typed event ID
 │   │   │   Result.cs                           # Result / Error types
 │   │   │   BaseEntity.cs                       # Base entity with domain events
 │   │   │   IDomainEvent.cs                     # Domain event marker
 │   │   │
-│   │   ├── Evently.Common.Application/         # Shared application abstractions
+│   │   ├── {ProjectRoot}.Common.Application/         # Shared application abstractions
 │   │   │   EventBus/
 │   │   │     IIntegrationEvent.cs              # Integration event marker interface
 │   │   │     IEventBus.cs                      # In-process or broker abstraction
 │   │   │   DateTimeProvider/
 │   │   │     IDateTimeProvider.cs
 │   │   │
-│   │   ├── Evently.Common.Infrastructure/      # Shared infrastructure concerns
+│   │   ├── {ProjectRoot}.Common.Infrastructure/      # Shared infrastructure concerns
 │   │   │   EventBus/
 │   │   │     InProcessEventBus.cs              # Default in-process implementation
 │   │   │   BackgroundJobs/
 │   │   │     IntegrationEventProcessor.cs
 │   │   │
-│   │   └── Evently.Common.Presentation/        # Shared presentation concerns
+│   │   └── {ProjectRoot}.Common.Presentation/        # Shared presentation concerns
 │   │       Results/
 │   │         ResultExtensions.cs               # Map Result to IResult / ProblemDetails
 │   │       ExceptionHandling/
@@ -68,12 +68,12 @@ Evently/
 │   │
 │   └── Modules/
 │       ├── Attendance/                         # Attendance bounded context
-│       │   ├── Evently.Modules.Attendance.Domain/
+│       │   ├── {ProjectRoot}.Modules.Attendance.Domain/
 │       │   │   Attendee.cs                     # Internal: aggregate root / entity
 │       │   │   Events/
 │       │   │     AttendanceRegistered.cs       # Internal: domain event
 │       │   │
-│       │   ├── Evently.Modules.Attendance.Application/
+│       │   ├── {ProjectRoot}.Modules.Attendance.Application/
 │       │   │   Attendees/
 │       │   │     GetAttendee/
 │       │   │       GetAttendeeQuery.cs
@@ -84,35 +84,35 @@ Evently/
 │       │   │   IntegrationEventsHandlers/      # Handles events from other modules
 │       │   │     EventCreatedHandler.cs
 │       │   │
-│       │   ├── Evently.Modules.Attendance.Infrastructure/
+│       │   ├── {ProjectRoot}.Modules.Attendance.Infrastructure/
 │       │   │   Database/
 │       │   │     AttendanceDbContext.cs        # Internal: own DbContext, own schema
 │       │   │     Configurations/
 │       │   │       AttendeeConfiguration.cs
 │       │   │   DependencyInjection.cs          # Internal service registrations
 │       │   │
-│       │   ├── Evently.Modules.Attendance.Presentation/
+│       │   ├── {ProjectRoot}.Modules.Attendance.Presentation/
 │       │   │   Attendees/
 │       │   │     GetAttendeeEndpoint.cs
 │       │   │     RegisterAttendeeEndpoint.cs
 │       │   │   AttendanceModule.cs             # Public: MapGroup + endpoint wiring
 │       │   │
-│       │   ├── Evently.Modules.Attendance.IntegrationEvents/  # Public contracts
+│       │   ├── {ProjectRoot}.Modules.Attendance.IntegrationEvents/  # Public contracts
 │       │   │   AttendanceRegisteredIntegrationEvent.cs
 │       │   │   AttendanceDto.cs
 │       │   │
 │       │   └── test/
-│       │       ├── Evently.Modules.Attendance.ArchitectureTests/
-│       │       ├── Evently.Modules.Attendance.IntegrationTests/
-│       │       └── Evently.Modules.Attendance.UnitTests/
+│       │       ├── {ProjectRoot}.Modules.Attendance.ArchitectureTests/
+│       │       ├── {ProjectRoot}.Modules.Attendance.IntegrationTests/
+│       │       └── {ProjectRoot}.Modules.Attendance.UnitTests/
 │       │
 │       ├── Events/                             # Events bounded context (same 5-project layout)
 │       ├── Ticketing/                          # Ticketing bounded context
 │       └── Users/                              # Users bounded context
 │
 ├── test/
-│   ├── Evently.ArchitectureTests/              # Cross-cutting architecture rules
-│   └── Evently.IntegrationTests/               # End-to-end integration tests
+│   ├── {ProjectRoot}.ArchitectureTests/              # Cross-cutting architecture rules
+│   └── {ProjectRoot}.IntegrationTests/               # End-to-end integration tests
 ```
 
 ### Project Dependencies Per Module
@@ -151,7 +151,7 @@ Every module follows the same dependency flow:
 Each module exposes extension methods via its Presentation project. The API host never touches module internals.
 
 ```csharp
-// Evently.Modules.Attendance.Presentation/AttendanceModule.cs
+// {ProjectRoot}.Modules.Attendance.Presentation/AttendanceModule.cs
 public static class AttendanceModule
 {
     public static IServiceCollection AddAttendanceModule(
@@ -176,7 +176,7 @@ public static class AttendanceModule
     }
 }
 
-// Evently.Modules.Attendance.Infrastructure/DependencyInjection.cs
+// {ProjectRoot}.Modules.Attendance.Infrastructure/DependencyInjection.cs
 internal static class DependencyInjection
 {
     public static IServiceCollection AddAttendanceInfrastructure(
@@ -193,7 +193,7 @@ internal static class DependencyInjection
     }
 }
 
-// Evently.Api/Program.cs
+// {ProjectRoot}.Api/Program.cs
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAttendanceModule(builder.Configuration);
@@ -216,7 +216,7 @@ app.Run();
 Each module uses its own schema within the same database. The DbContext lives in the Infrastructure project and is `internal`.
 
 ```csharp
-// Evently.Modules.Attendance.Infrastructure/Database/AttendanceDbContext.cs
+// {ProjectRoot}.Modules.Attendance.Infrastructure/Database/AttendanceDbContext.cs
 internal sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> options)
     : DbContext(options)
 {
@@ -232,7 +232,7 @@ internal sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> 
 // Migration command (run from the Infrastructure project):
 // dotnet ef migrations add InitialCreate --context AttendanceDbContext \
 //   --output-dir Database/Migrations \
-//   --project Evently.Modules.Attendance.Infrastructure
+//   --project {ProjectRoot}.Modules.Attendance.Infrastructure
 ```
 
 ### Integration Events
@@ -240,7 +240,7 @@ internal sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> 
 Integration events are the only public contracts between modules. They live in the dedicated `.IntegrationEvents` project — a separate class library with no dependencies.
 
 ```csharp
-// Evently.Modules.Attendance.IntegrationEvents/AttendanceRegisteredIntegrationEvent.cs
+// {ProjectRoot}.Modules.Attendance.IntegrationEvents/AttendanceRegisteredIntegrationEvent.cs
 public sealed record AttendanceRegisteredIntegrationEvent(
     Guid EventId,
     Guid AttendeeId,
@@ -251,7 +251,7 @@ public sealed record AttendanceRegisteredIntegrationEvent(
 The Application layer of a module contains handlers for integration events published by other modules:
 
 ```csharp
-// Evently.Modules.Attendance.Application/IntegrationEventsHandlers/EventCreatedHandler.cs
+// {ProjectRoot}.Modules.Attendance.Application/IntegrationEventsHandlers/EventCreatedHandler.cs
 internal sealed class EventCreatedIntegrationEventHandler(
     AttendanceDbContext db,
     IDateTimeProvider dateTimeProvider)
@@ -269,7 +269,7 @@ internal sealed class EventCreatedIntegrationEventHandler(
 The Common project is split into 4 layers matching Clean Architecture concerns. It provides shared building blocks but contains **no business logic**.
 
 ```csharp
-// Evently.Common.Domain/Result.cs
+// {ProjectRoot}.Common.Domain/Result.cs
 public sealed record Error(string Code, string Message)
 {
     public static readonly Error None = new(string.Empty, string.Empty);
@@ -293,14 +293,14 @@ public class Result
     public static Result<T> Failure<T>(Error error) => new(default, false, error);
 }
 
-// Evently.Common.Application/EventBus/IIntegrationEvent.cs
+// {ProjectRoot}.Common.Application/EventBus/IIntegrationEvent.cs
 public interface IIntegrationEvent
 {
     Guid EventId { get; }
     DateTimeOffset OccurredAt { get; }
 }
 
-// Evently.Common.Application/EventBus/IEventBus.cs
+// {ProjectRoot}.Common.Application/EventBus/IEventBus.cs
 public interface IEventBus
 {
     Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default)
@@ -309,7 +309,7 @@ public interface IEventBus
         where TEvent : IIntegrationEvent;
 }
 
-// Evently.Common.Presentation/Results/ResultExtensions.cs
+// {ProjectRoot}.Common.Presentation/Results/ResultExtensions.cs
 public static class ResultExtensions
 {
     public static IResult ToProblemDetails(this Result result)
@@ -329,7 +329,7 @@ public static class ResultExtensions
 For monolith-first, an in-process event bus using `System.Threading.Channels`:
 
 ```csharp
-// Evently.Common.Infrastructure/EventBus/InProcessEventBus.cs
+// {ProjectRoot}.Common.Infrastructure/EventBus/InProcessEventBus.cs
 public sealed class InProcessEventBus : IEventBus, IHostedService
 {
     private readonly Channel<IIntegrationEvent> _channel =
@@ -402,19 +402,19 @@ Each module has its own test projects, plus solution-level cross-cutting tests:
 
 ```
 test/
-  Evently.ArchitectureTests/              # Enforces module isolation rules globally
+  {ProjectRoot}.ArchitectureTests/              # Enforces module isolation rules globally
     ModuleIsolationTests.cs               # No module references another module's internals
     NamingConventionTests.cs
 
-  Evently.IntegrationTests/               # End-to-end tests spanning multiple modules
+  {ProjectRoot}.IntegrationTests/               # End-to-end tests spanning multiple modules
 
 Modules/Attendance/test/
-  Evently.Modules.Attendance.ArchitectureTests/  # Module-internal architecture rules
+  {ProjectRoot}.Modules.Attendance.ArchitectureTests/  # Module-internal architecture rules
     DomainLayerTests.cs                           # Domain has no external dependencies
     InfrastructureLayerTests.cs
-  Evently.Modules.Attendance.IntegrationTests/   # Module-level integration tests
+  {ProjectRoot}.Modules.Attendance.IntegrationTests/   # Module-level integration tests
     RegisterAttendeeTests.cs
-  Evently.Modules.Attendance.UnitTests/          # Unit tests for domain/application logic
+  {ProjectRoot}.Modules.Attendance.UnitTests/          # Unit tests for domain/application logic
     AttendeeTests.cs
 ```
 
@@ -423,18 +423,18 @@ Modules/Attendance/test/
 When adding a new bounded context (e.g., `Notifications`):
 
 1. **Create 5 projects** under `src/Modules/Notifications/`:
-   - `Evently.Modules.Notifications.Domain`
-   - `Evently.Modules.Notifications.Application`
-   - `Evently.Modules.Notifications.Infrastructure`
-   - `Evently.Modules.Notifications.Presentation`
-   - `Evently.Modules.Notifications.IntegrationEvents`
+   - `{ProjectRoot}.Modules.Notifications.Domain`
+   - `{ProjectRoot}.Modules.Notifications.Application`
+   - `{ProjectRoot}.Modules.Notifications.Infrastructure`
+   - `{ProjectRoot}.Modules.Notifications.Presentation`
+   - `{ProjectRoot}.Modules.Notifications.IntegrationEvents`
 
 2. **Set project references** following the dependency flow (see diagram above).
 
 3. **Create test projects** under `src/Modules/Notifications/test/`:
-   - `Evently.Modules.Notifications.ArchitectureTests`
-   - `Evently.Modules.Notifications.IntegrationTests`
-   - `Evently.Modules.Notifications.UnitTests`
+   - `{ProjectRoot}.Modules.Notifications.ArchitectureTests`
+   - `{ProjectRoot}.Modules.Notifications.IntegrationTests`
+   - `{ProjectRoot}.Modules.Notifications.UnitTests`
 
 4. **Add the DbContext** in Infrastructure with its own schema:
    ```csharp
@@ -472,7 +472,7 @@ When adding a new bounded context (e.g., `Notifications`):
 
 6. **Register in the API host**:
    ```csharp
-   // Evently.Api/Program.cs
+   // {ProjectRoot}.Api/Program.cs
    builder.Services.AddNotificationsModule(builder.Configuration);
    app.MapNotificationsModule();
    ```
@@ -503,7 +503,7 @@ builder.Services.AddHttpClient<IAttendanceQueryService, AttendanceServiceClient>
 
 ```csharp
 // BAD — both modules reference the same entity class
-// Evently.Common.Domain/Attendee.cs
+// {ProjectRoot}.Common.Domain/Attendee.cs
 public class Attendee { ... }
 
 // Attendance and Events modules both use Attendee directly
@@ -531,27 +531,27 @@ var events = await db.Set<Event>()  // Event is from Events module!
 
 ```csharp
 // BAD — Common project becomes a dumping ground
-Evently.Common.Domain/
+{ProjectRoot}.Common.Domain/
   Entities/          # domain entities don't belong here
   Services/          # business logic doesn't belong here
   Helpers/           # utility classes don't belong here
 
 // GOOD — Common contains only building blocks
-Evently.Common.Domain/          # Result, Error, BaseEntity, IDomainEvent
-Evently.Common.Application/     # IIntegrationEvent, IEventBus, IDateTimeProvider
-Evently.Common.Infrastructure/  # InProcessEventBus, integration event processor
-Evently.Common.Presentation/    # Result-to-IResult mapping, exception handling
+{ProjectRoot}.Common.Domain/          # Result, Error, BaseEntity, IDomainEvent
+{ProjectRoot}.Common.Application/     # IIntegrationEvent, IEventBus, IDateTimeProvider
+{ProjectRoot}.Common.Infrastructure/  # InProcessEventBus, integration event processor
+{ProjectRoot}.Common.Presentation/    # Result-to-IResult mapping, exception handling
 ```
 
 ### Module Referencing Another Module's Internals
 
 ```csharp
 // BAD — Attendance module references Events module's Application or Domain
-// Evently.Modules.Attendance.Application references Evently.Modules.Events.Application
+// {ProjectRoot}.Modules.Attendance.Application references {ProjectRoot}.Modules.Events.Application
 // Tight coupling — can't extract either module independently
 
 // GOOD — Attendance only references Events.IntegrationEvents
-// Evently.Modules.Attendance.Application references Evently.Modules.Events.IntegrationEvents
+// {ProjectRoot}.Modules.Attendance.Application references {ProjectRoot}.Modules.Events.IntegrationEvents
 // The IntegrationEvents project has no dependencies — just POCO contracts
 ```
 
@@ -585,4 +585,4 @@ internal sealed class TicketingDbContext : DbContext { /* ticketing schema */ }
 | When to extract to microservices | When a module has independent scaling needs, different deployment cadence, or different SLA requirements |
 | Module referencing another module | Only reference `.IntegrationEvents` projects. Never reference Domain, Application, or Infrastructure |
 | Number of modules | Start with 2-4 coarse-grained modules aligned to business capabilities. Split when a module grows too large for its team |
-| Module naming convention | `{Company}.Modules.{ModuleName}.{Layer}` — e.g., `Evently.Modules.Attendance.Domain` |
+| Module naming convention | `{Company}.Modules.{ModuleName}.{Layer}` — e.g., `{ProjectRoot}.Modules.Attendance.Domain` |
