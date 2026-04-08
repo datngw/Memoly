@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -L -o \"d:/kodoku/.NET/Projects/Memoly/docs/architecture.png\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/abc14b30-ac86-4392-9428-0b1a2a78af68/cd6e1ac03e9230ee2c589015296c72c6.png?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1775643495&Signature=igx3Dhm6fSN0pFmaHbEevcgdLKc=\")"
+    ]
+  }
+}
