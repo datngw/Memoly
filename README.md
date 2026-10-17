@@ -1,25 +1,34 @@
 # Memoly
 
-Turn every lifeless object into a living diary page with a smart management system.
+Photos, videos, voice recordings, and their stories — kept together.
 
 ## Overview
 
-**Memoly** is an app that lets you attach stories and memories to physical objects through QR codes. Every item — an old medal, a rare book, a keepsake — carries a story. Memoly helps you preserve and pass those stories on to yourself and future generations.
+Photos end up in the camera roll. Videos stay in chats. Notes get written and forgotten. Memoly keeps every kind of memory in one app, so each one is easy to find again years later.
+
+Every entry holds its media together with the details that matter: how you felt, where it happened, and why it was worth keeping. Entries can be grouped into collections and found by search.
+
+A memory can also be shared as a link — a small page that shows just that one, styled with your own colors and text. Send it around to show the moment off to anyone; revoke it anytime.
+
+Memoly is for anyone who records life as it happens — journal keepers, families, travelers, couples — and above all for those who want to keep someone's voice safe.
+
+The goal is not to invent a new way of saving memories. It is to do it well: an app that is beautiful to open, easy to browse, and simple to come back to. Every kind of entry — voice above all — lives side by side, and everything can be exported and imported whenever needed.
+
+## Features
+
+- **Four kinds of entries** — photos, videos, voice recordings, and writing
+- **Context** — each entry carries a mood, a place, and its story
+- **Collections** — group entries by theme
+- **Search** — find an old entry in seconds
+- **Time Capsules** — hide an entry until a date you choose
+- **Share links** — turn a memory into a link to show anyone, with its own look: colors, text, and more
+- **Backup & transfer** — export and import everything, any time
 
 ## Architecture
 
 ![Memoly Architecture](docs/architecture.png)
 
-## How It Works
-
-1. **Register** — Take a photo of the item, enter its details, and write the story behind it. You can also upload related old photographs.
-   - _Example:_ Photograph an old medal, label it "Dad's medal from 1995," and write its story.
-
-2. **Generate Code** — The app creates a QR code. You can print it as a sticker or save the file to print later.
-
-3. **Tag** — Stick the QR code onto the item or its container.
-
-4. **Retrieve** — Whenever you (or your descendants) pick up the item, simply open your phone camera and scan the code — the full story and vintage photos appear instantly.
+Modular monolith backend (each bounded context an isolated module communicating via integration events) + React SPA client.
 
 ## Tech Stack
 
@@ -35,8 +44,7 @@ Turn every lifeless object into a living diary page with a smart management syst
 | API Docs       | Scalar                                               |
 | Logging        | Serilog + Seq                                        |
 | Resilience     | Polly v8                                             |
-| Event Bus      | MassTransit (RabbitMQ)                               |
-| CQRS           | MediatR                                              |
+| Messaging & CQRS | Wolverine (RabbitMQ, transactional outbox)         |
 | Validation     | FluentValidation                                     |
 | Mapping        | Mapster                                              |
 | Authentication | OpenIddict                                           |
@@ -54,7 +62,14 @@ Turn every lifeless object into a living diary page with a smart management syst
 | Icons         | Lucide Icons        |
 | Styling       | Tailwind CSS        |
 
+## Roadmap
+
+- **Phase 1 (current)** — web: React SPA + .NET backend API.
+- **Phase 2 (future)** — native iOS client consuming the same API.
+
 ## Getting Started
+
+> The project has not been scaffolded yet.
 
 ```bash
 # Backend (via Aspire — starts API + all containers)

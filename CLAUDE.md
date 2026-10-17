@@ -6,9 +6,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Memoly is a greenfield project. The codebase has not been scaffolded yet — no `.slnx`, `.csproj`, or source files exist. Governance is defined in `.specify/memory/constitution.md`.
 
+**Phase plan**:
+
+- **Phase 1 (current)** — **web**: React SPA + .NET backend API, the full Memoly experience in the browser.
+- **Phase 2 (future)** — native iOS client consuming the same API. Do not build iOS code now.
+
+## Product Overview
+
+**Memoly** keeps life's moments together — photos, videos, voice recordings, and writing — each stored with the feeling, place, and story that go with it, so nothing gets lost over the years.
+
+### Core Features
+
+- **Four kinds of entries**: photos, videos, voice recordings, and writing
+- **Context per entry**: mood, place, and story alongside the media
+- **Collections**: group entries by theme
+- **Search**: find old entries quickly
+- **Time Capsules**: entries hidden until a chosen date
+- **Share links**: publish a memory as a read-only public link to show it to others, styled by the owner — colors, text, and more
+- **Export & import**: full backups; transfer between devices
+
+### Product Philosophy
+
+- **One user, no social** — a single person's memories; no feeds, no profiles, no tracking
+- **Share what you choose** — any memory can be published as a read-only link, styled your way, and revoked at any time
+- **Well-made, not new** — the value is a beautiful, easy interface, not a novel concept
+- **Voice comes first** — recordings are a main content type, equal to photos and videos
+- **No lock-in** — everything can be exported and re-imported at any time
+
 ## Architecture
 
-**Modular Monolith** — each bounded context is an independent module with 5 projects following Clean Architecture internally.
+**Modular Monolith** — each bounded context is an independent module with 5 projects following Clean Architecture internally. The React SPA is the Phase 1 client.
+
+Candidate bounded contexts (finalized per feature spec): **Memories** (entries + media), **Collections**, **Time Capsules**, **Backup** (export/import), plus authentication.
 
 ### Solution Structure
 
@@ -36,8 +65,8 @@ Memoly/
 │   │
 │   ├── Common/
 │   │   ├── Memoly.Common.Domain/              # Shared domain primitives (Result, Error, BaseEntity, IDomainEvent)
-│   │   ├── Memoly.Common.Application/         # Shared app abstractions (IIntegrationEvent, IEventBus, IDateTimeProvider)
-│   │   ├── Memoly.Common.Infrastructure/      # Shared infra (InProcessEventBus, IntegrationEventProcessor)
+│   │   ├── Memoly.Common.Application/         # Shared app abstractions (IIntegrationEvent, IDateTimeProvider)
+│   │   ├── Memoly.Common.Infrastructure/      # Shared infra (Wolverine configuration helpers, outbox support)
 │   │   └── Memoly.Common.Presentation/        # Shared presentation (Result→IResult mapping, exception handling)
 │   │
 │   ├── Modules/
@@ -49,7 +78,7 @@ Memoly/
 │   │       └── Memoly.Modules.{Name}.IntegrationEvents/  # Public contracts only (no dependencies)
 │   │
 │   └── Frontend/
-│       └── memoly-web/                        # React + Vite SPA
+│       └── memoly-web/                        # React + Vite SPA (Phase 1 client)
 │
 ├── test/
 │   ├── Memoly.ArchitectureTests/              # Cross-cutting architecture rules (module isolation)
@@ -96,7 +125,7 @@ Memoly/
 
 - Module internal types are `internal` by default. Only `.IntegrationEvents` exposes public contracts.
 - No module references another module's Domain, Application, or Infrastructure projects — only `.IntegrationEvents`.
-- Each module has its own `DbContext` (own schema via `modelBuilder.HasDefaultSchema("modulename")`), owned by its Infrastructure project.
+- Each module has its own `DbContext` (own schema via `modelBuilder.HasDefaultSchema("modulename")`), owned by its Infrastructure project. Contexts are registered with `AddDbContextWithWolverineIntegration` and carry the Wolverine inbox/outbox tables so integration events commit with the data.
 - Modules communicate exclusively through integration events — no direct cross-module DB queries.
 - Common kernel contains zero business logic (only building blocks: Result types, event bus abstractions, presentation helpers).
 
@@ -117,6 +146,39 @@ builder.Services.Add{Name}Module(builder.Configuration);
 app.Map{Name}Module();
 ```
 
+Wolverine is wired once at the API host — RabbitMQ transport, EF Core transactional outbox, auto-applied transactions. Each module's handlers are discovered by including its Presentation assembly:
+
+```csharp
+// API: Program.cs — Wolverine wiring alongside module registration
+builder.Host.UseWolverine(opts =>
+{
+    opts.Discovery.IncludeAssembly(typeof({Name}Module).Assembly);  // repeat per module
+    opts.UseRabbitMq(rabbit => rabbit.HostName = builder.Configuration["RabbitMq:Host"]!)
+        .AutoProvision();                     // dev convenience — auto-create topology
+    opts.Policies.AutoApplyTransactions();    // entities + outbox messages commit atomically
+});
+```
+
+### Media Handling
+
+Photos, videos, and audio recordings are large binary content and need explicit treatment:
+
+- Media files are stored on the server filesystem under a configurable root (Options pattern), owned by the module that owns the content — never as byte columns in the database; the DB keeps metadata + file references.
+- Uploads and downloads stream: multipart streaming in, range-request-capable endpoints out (needed for audio/video seeking). Never load a whole media file into memory.
+- Deleting a memory must delete its media files (event-driven cleanup).
+- The SPA records audio with `MediaRecorder` and uploads the blob; playback streams from the API.
+- Generate downscaled thumbnails for grids/lists.
+
+### Share Links
+
+Any memory can be published as a public, read-only link — a way to show one moment to anyone who receives it:
+
+- The API exposes an unauthenticated route group for shared pages. A share is addressed by an unguessable token — never by the memory's real id.
+- A shared page renders exactly one memory (media, story, mood, place) and nothing else — no way to navigate into the rest of the app.
+- The owner customizes the page's look — colors, text, and other presentation options defined per spec. Customization lives with the share, so the private entry stays unaffected.
+- Unsharing revokes the token immediately; re-sharing issues a new token.
+- Shared pages carry no tracking of any kind.
+
 ## Technology Stack
 
 ### Backend
@@ -129,11 +191,10 @@ app.Map{Name}Module();
 - **API Docs**: Scalar
 - **Logging**: Serilog (two-stage bootstrap, structured logging) + Seq
 - **Resilience**: Polly v8 pipelines
-- **Event Bus**: MassTransit (RabbitMQ transport)
-- **CQRS**: MediatR
+- **Messaging & CQRS**: Wolverine — one library for the command bus and integration events (replaces MediatR + MassTransit); RabbitMQ transport, transactional outbox with EF Core
 - **Validation**: FluentValidation
 - **Mapping**: Mapster
-- **Authentication**: OpenIddict
+- **Authentication**: OpenIddict (secures a single-user deployment — no sign-up flow, no multi-tenancy)
 - **Testing**: xUnit v3, Fluent Assertions, Moq, WebApplicationFactory, Testcontainers
 - **Code Quality**: SonarQube
 - **Solution format**: `.slnx`
@@ -185,6 +246,8 @@ dotnet ef migrations add InitialCreate --context {Module}DbContext \
 - Options pattern (`IOptions<T>` / `IOptionsSnapshot<T>`) for configuration
 - Async/await with `CancellationToken` propagation end-to-end
 - Integration events are `sealed record` types implementing `IIntegrationEvent`
+- Wolverine handler conventions: plain `Handle`/`HandleAsync` methods (no mediator interfaces), events published as cascading return values or via `IMessageBus` — always through the transactional outbox, never fire-and-forget
+- Accessibility is a feature: keyboard navigation, focus states, reduced-motion variants, dark mode — every SPA screen; responsive from phone width up
 
 ## Adding a New Module
 

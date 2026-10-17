@@ -1,20 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version change: (new) → 1.0.0
-Modified principles: N/A (initial ratification)
+Version change: 1.0.0 → 2.0.0 (product pivot; technical principles retained)
+Modified principles:
+  - None — principles I–V are unchanged from 1.0.0
 Added sections:
-  - Core Principles (5 principles)
-  - Technology Stack
-  - Development Workflow
-  - Governance
+  - Core Principle VI: "Privacy & User Data Ownership" (product-level, incl. the
+    share-link rule: explicit per-memory sharing, read-only, revocable)
+  - Phase Context under Development Workflow (web first, native iOS client later)
 Removed sections: N/A
 Templates requiring updates:
   - .specify/templates/plan-template.md — ✅ no changes needed (generic placeholders compatible)
   - .specify/templates/spec-template.md — ✅ no changes needed (generic placeholders compatible)
   - .specify/templates/tasks-template.md — ✅ no changes needed (generic placeholders compatible)
   - .specify/templates/checklist-template.md — ✅ no changes needed
-Follow-up TODOs: None
+Follow-up TODOs:
+  - docs/architecture.png depicts the modular monolith architecture — still accurate; revisit if module layout changes
 -->
 
 # Memoly Constitution
@@ -43,15 +44,18 @@ Performance MUST be a first-class concern from design through implementation.
 
 - All I/O-bound operations MUST use async/await with `CancellationToken`
   propagation end-to-end.
+- Media (photos, videos, audio) MUST be streamed — never loaded fully into
+  memory — for both upload and download, with range-request support for
+  audio/video playback. Media files live on the filesystem, not in the
+  database.
+- Database queries MUST be optimized: projection selects, compiled queries,
+  batch operations, and proper indexing. N+1 queries are forbidden.
+- Memory and latency budgets MUST be defined for critical paths (memory
+  grid scrolling, media streaming). Any regression beyond budget requires
+  investigation before merge.
 - Hot paths MUST avoid allocations where feasible: use `Span<T>`,
   `Memory<T>`, object pooling, and `ArrayPool<T>` for high-throughput
   scenarios.
-- Database queries MUST be optimized: projection selects, compiled queries,
-  batch operations, and proper indexing. N+1 queries are forbidden.
-- Memory and latency budgets MUST be defined for critical paths. Any
-  regression beyond budget requires investigation before merge.
-- Use `ref struct`, `stackalloc`, and pooling patterns for
-  performance-sensitive code paths where benchmarks justify the complexity.
 
 **Rationale**: Performance regressions are exponentially harder to fix than
 prevent. Establishing budgets and discipline early avoids costly rewrites.
@@ -99,12 +103,12 @@ clean interfaces, and provides living documentation of intended behavior.
 
 Start simple. Add complexity only when justified by measurable need.
 
-- YAGNI: Do not build for hypothetical future requirements. Implement what
-  the current feature requires.
+- YAGNI: Do not build for hypothetical future requirements — including the
+  Phase 2 iOS client — implement what the current feature requires.
 - Prefer built-in .NET abstractions over third-party packages unless the
   package provides significant, proven value (e.g., EF Core, Serilog).
-- Avoid premature abstraction: three similar lines of code are better than
-  a wrong abstraction. Introduce abstractions when duplication has a clear
+- Avoid premature abstraction: three similar lines of code are better than a
+  wrong abstraction. Introduce abstractions when duplication has a clear
   pattern AND a third use case is imminent.
 - Every architectural decision that adds complexity MUST be documented with
   rationale in the plan's Complexity Tracking table.
@@ -114,11 +118,32 @@ Start simple. Add complexity only when justified by measurable need.
 **Rationale**: Unnecessary complexity is the primary source of maintenance
 burden and onboarding friction. Simplicity enables velocity.
 
+### VI. Privacy & User Data Ownership
+
+Memoly holds a person's private memories. The product MUST treat that data
+as the user's property.
+
+- No telemetry, analytics, or tracking of any kind.
+- No social network features: no feeds, no profiles, no following, no
+  cross-user browsing.
+- Sharing is explicit and scoped: a user MAY publish a single memory as a
+  public link. A shared page is read-only, shows exactly one memory, and
+  can be revoked at any time.
+- Export/import is a first-class feature: users MUST always be able to get
+  a complete, self-contained archive of their data (entries + media) and
+  restore it.
+- Third-party services MUST NOT receive user content.
+
+**Rationale**: Trust is the foundation of a memory-keeping product. Every
+feature decision must be weighed against "would the user feel their
+memories are still theirs?"
+
 ## Technology Stack
 
 **Runtime**: .NET 10 (latest LTS features, C# 14)
 **Web Framework**: ASP.NET Core Minimal APIs with OpenAPI support
 **ORM**: Entity Framework Core with code-first migrations
+**Messaging & CQRS**: Wolverine (RabbitMQ transport, transactional outbox with EF Core)
 **Logging**: Serilog with structured logging, two-stage bootstrap
 **Testing**: xUnit v3, WebApplicationFactory, Testcontainers, Verify
 **Architecture**: Modular Monolith
@@ -126,8 +151,14 @@ burden and onboarding friction. Simplicity enables velocity.
 **Resilience**: Polly v8 pipelines (retry, circuit breaker, timeout)
 **Package Management**: Central package management (Directory.Packages.props)
 **Solution Format**: .slnx
+**Frontend**: React + Vite, Zustand, shadcn/ui, Tailwind CSS
 
 ## Development Workflow
+
+### Phase Context
+
+- Phase 1 (current): web — React SPA + .NET backend API.
+- Phase 2 (future): native iOS client consuming the same API.
 
 ### Branch Strategy
 
@@ -157,10 +188,10 @@ development decisions on the Memoly project.
 - All PRs and code reviews MUST verify compliance with these principles.
 - Amendments require: written proposal, documented rationale, and a
   migration plan for existing code that violates the new principle.
-- Any deviation from these principles MUST be explicitly justified in
-  the plan's Complexity Tracking table.
+- Any deviation from these principles MUST be explicitly justified in the
+  plan's Complexity Tracking table.
 - Constitution version follows semantic versioning: MAJOR for breaking
   principle changes, MINOR for new principles, PATCH for clarifications.
 - Use `.specify/` templates and CLAUDE.md for runtime development guidance.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-08 | **Last Amended**: 2026-04-08
+**Version**: 2.0.0 | **Ratified**: 2026-04-08 | **Last Amended**: 2026-10-17
