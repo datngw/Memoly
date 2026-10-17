@@ -16,7 +16,7 @@ Everything can be backed up and taken with you. Private by design — no feeds, 
 
 ## Why I Built This
 
-Because I kept meeting memories I could no longer reach. A song plays and I can't remember the trip. There's a plant someone once gave me years ago — I still water it, but the day, the room, the reason are fading. A voice I'd give anything to hear again was never recorded.
+Because I kept meeting memories I could no longer reach. A song plays and I can't remember the trip. There's a plant someone once gave me years ago. A voice I'd give anything to hear again was never recorded.
 
 I didn't want a social network, and I didn't want another cloud folder. I wanted one quiet place where a memory keeps its whole self — the photo and the feeling, the voice and the story — and where everything stays mine: private, exportable, built to be reopened years from now, not scrolled past today.
 
