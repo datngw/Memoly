@@ -21,7 +21,6 @@ Memoly is a greenfield project. The codebase has not been scaffolded yet — no 
 - **Context per entry**: mood, place, and story alongside the media
 - **Collections**: group entries by theme
 - **Search**: find old entries quickly
-- **Time Capsules**: entries hidden until a chosen date
 - **Share links**: publish a memory as a read-only public link to show it to others, styled by the owner — colors, text, and more
 - **Export & import**: full backups; transfer between devices
 
@@ -37,7 +36,7 @@ Memoly is a greenfield project. The codebase has not been scaffolded yet — no 
 
 **Modular Monolith** — each bounded context is an independent module with 5 projects following Clean Architecture internally. The React SPA is the Phase 1 client.
 
-Candidate bounded contexts (finalized per feature spec): **Memories** (entries + media), **Collections**, **Time Capsules**, **Backup** (export/import), plus authentication.
+Candidate bounded contexts (finalized per feature spec): **Memories** (entries + media), **Collections**, **Backup** (export/import), plus authentication.
 
 ### Solution Structure
 

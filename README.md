@@ -1,34 +1,37 @@
 # Memoly
 
-Photos, videos, voice recordings, and their stories — kept together.
+A keeper of memories — the people, the trips, the things, and the stories they carry.
 
 ## Overview
 
-Photos end up in the camera roll. Videos stay in chats. Notes get written and forgotten. Memoly keeps every kind of memory in one app, so each one is easy to find again years later.
+Time takes things quietly. The trip you swore you'd never forget. The voice you keep meaning to record. The old objects in your drawer, each with a story no one has written down.
 
-Every entry holds its media together with the details that matter: how you felt, where it happened, and why it was worth keeping. Entries can be grouped into collections and found by search.
+**Memoly is a home for those memories.** Save a photo, a video, a voice recording, or your own words — and keep the feeling with them: who was there, where it happened, why it mattered. Not files in a folder, but memories you can walk through whenever you miss them.
 
-A memory can also be shared as a link — a small page that shows just that one, styled with your own colors and text. Send it around to show the moment off to anyone; revoke it anytime.
+It holds the moments life is made of — dinners with the people you love, journeys that changed you, the little things you keep because of what they've seen, a voice you'll want to hear again years from now. Organize them into collections and find any of them again in seconds, or share one as a link — a little page of its own, styled your way.
 
-Memoly is for anyone who records life as it happens — journal keepers, families, travelers, couples — and above all for those who want to keep someone's voice safe.
+And someday you'll want to look back — a quiet evening, a song that reminds you of someone. Open Memoly, and the beautiful moments are all there, waiting.
 
-The goal is not to invent a new way of saving memories. It is to do it well: an app that is beautiful to open, easy to browse, and simple to come back to. Every kind of entry — voice above all — lives side by side, and everything can be exported and imported whenever needed.
+Everything can be backed up and taken with you. Private by design — no feeds, no tracking, just your memories and the people in them.
+
+## Why I Built This
+
+Because I kept meeting memories I could no longer reach. A song plays and I can't remember the trip. There's a plant someone once gave me years ago — I still water it, but the day, the room, the reason are fading. A voice I'd give anything to hear again was never recorded.
+
+I didn't want a social network, and I didn't want another cloud folder. I wanted one quiet place where a memory keeps its whole self — the photo and the feeling, the voice and the story — and where everything stays mine: private, exportable, built to be reopened years from now, not scrolled past today.
 
 ## Features
 
 - **Four kinds of entries** — photos, videos, voice recordings, and writing
-- **Context** — each entry carries a mood, a place, and its story
-- **Collections** — group entries by theme
-- **Search** — find an old entry in seconds
-- **Time Capsules** — hide an entry until a date you choose
-- **Share links** — turn a memory into a link to show anyone, with its own look: colors, text, and more
+- **The details that matter** — a mood, a place, and the story, saved with each entry
+- **Collections** — group entries around a trip, a year, a person
+- **Search** — find any old entry in seconds
+- **Share links** — publish a memory as a page with its own colors and text; revoke it anytime
 - **Backup & transfer** — export and import everything, any time
 
 ## Architecture
 
 ![Memoly Architecture](docs/architecture.png)
-
-Modular monolith backend (each bounded context an isolated module communicating via integration events) + React SPA client.
 
 ## Tech Stack
 
@@ -61,11 +64,6 @@ Modular monolith backend (each bounded context an isolated module communicating 
 | UI Components | shadcn/ui           |
 | Icons         | Lucide Icons        |
 | Styling       | Tailwind CSS        |
-
-## Roadmap
-
-- **Phase 1 (current)** — web: React SPA + .NET backend API.
-- **Phase 2 (future)** — native iOS client consuming the same API.
 
 ## Getting Started
 
