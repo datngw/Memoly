@@ -82,4 +82,4 @@ npm run dev
 
 ## License
 
-Personal project — not for distribution.
+Distributed under the [MIT License](LICENSE).
