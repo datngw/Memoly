@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "excalidraw": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-excalidraw-server"
+      ],
+      "env": {
+        "EXCALIDRAW_EXPORT_DIR": "D:/kodoku/projects/Memoly",
+        "EXCALIDRAW_NO_AUTOSTART": "1"
+      }
+    }
+  }
+}
