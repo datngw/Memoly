@@ -31,7 +31,11 @@ I didn't want a social network, and I didn't want another cloud folder. I wanted
 
 ## Architecture
 
-![Memoly Architecture](docs/architecture.png)
+**Vertical Slice Architecture** — a single .NET application organized by feature slices (endpoint, handler, validator, EF Core configuration) over a shared `MemolyDbContext`, with Wolverine as the in-process command bus.
+
+![Memoly system architecture](docs/architecture.png)
+
+Diagram source: [architecture.excalidraw](docs/architecture.excalidraw).
 
 ## Tech Stack
 
@@ -41,19 +45,18 @@ I didn't want a social network, and I didn't want another cloud folder. I wanted
 | -------------- | ---------------------------------------------------- |
 | Runtime        | .NET 10, C# 14                                       |
 | Orchestration  | .NET Aspire                                          |
-| Reverse Proxy  | Traefik                                              |
 | API            | ASP.NET Core Minimal APIs                            |
 | ORM            | EF Core                                              |
 | API Docs       | Scalar                                               |
 | Logging        | Serilog + Seq                                        |
 | Resilience     | Polly v8                                             |
-| Messaging & CQRS | Wolverine (RabbitMQ, transactional outbox)         |
+| Messaging & CQRS | Wolverine (in-process command bus, EF Core durable messaging) |
 | Validation     | FluentValidation                                     |
 | Mapping        | Mapster                                              |
-| Authentication | OpenIddict                                           |
+| Authentication | Keycloak (OIDC)                                      |
 | Testing        | xUnit v3, Fluent Assertions, Moq, Testcontainers    |
 | Code Quality   | SonarQube                                            |
-| Architecture   | Modular Monolith                                     |
+| Architecture   | Vertical Slice Architecture                          |
 
 ### Frontend
 

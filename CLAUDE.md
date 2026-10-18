@@ -34,9 +34,9 @@ Memoly is a greenfield project. The codebase has not been scaffolded yet — no 
 
 ## Architecture
 
-**Modular Monolith** — each bounded context is an independent module with 5 projects following Clean Architecture internally. The React SPA is the Phase 1 client.
+**Vertical Slice Architecture** — one application, one project, organized by feature slices instead of layers. The React SPA is the Phase 1 client.
 
-Candidate bounded contexts (finalized per feature spec): **Memories** (entries + media), **Collections**, **Backup** (export/import), plus authentication.
+Feature areas: **Memories** (entries, media, and search), **Collections**, **Sharing** (share links), and **Backup** (export & import) — each a folder of feature slices under `Features/`. Search is a product feature delivered as query slices inside `Memories`, not a separate feature folder. Authentication is a host-level concern in `Shared/Auth/`.
 
 ### Solution Structure
 
@@ -56,36 +56,28 @@ Memoly/
 │   │       └── Extensions.cs                  # OpenTelemetry, health checks, resilience, service discovery
 │   │
 │   ├── API/
-│   │   └── Memoly.Api/                        # Minimal API host (registered in AppHost)
-│   │       ├── Program.cs                     # Calls AddServiceDefaults() + registers modules
-│   │       ├── Modules/
-│   │       │   └── ModuleExtensions.cs         # Extension methods to register each module
+│   │   └── Memoly.Api/                        # The whole application — one project (registered in AppHost)
+│   │       ├── Program.cs                     # Composition root: services, Wolverine, endpoint mapping
+│   │       ├── Features/                      # Vertical slices — all app functionality lives here
+│   │       │   ├── Memories/                  # Entries + media + search slices
+│   │       │   ├── Collections/
+│   │       │   ├── Sharing/                   # Share links
+│   │       │   └── Backup/                    # Export & import
+│   │       ├── Shared/                        # Building blocks — zero business logic
+│   │       │   ├── Database/                  # MemolyDbContext + migrations
+│   │       │   ├── Media/                     # Filesystem media storage + thumbnails
+│   │       │   ├── Auth/                      # Keycloak OIDC setup (host-level)
+│   │       │   ├── Domain/                    # Result, Error, BaseEntity, event abstractions
+│   │       │   └── Presentation/              # Result→IResult mapping, exception handling
 │   │       └── appsettings.json
-│   │
-│   ├── Common/
-│   │   ├── Memoly.Common.Domain/              # Shared domain primitives (Result, Error, BaseEntity, IDomainEvent)
-│   │   ├── Memoly.Common.Application/         # Shared app abstractions (IIntegrationEvent, IDateTimeProvider)
-│   │   ├── Memoly.Common.Infrastructure/      # Shared infra (Wolverine configuration helpers, outbox support)
-│   │   └── Memoly.Common.Presentation/        # Shared presentation (Result→IResult mapping, exception handling)
-│   │
-│   ├── Modules/
-│   │   └── {ModuleName}/                       # Each bounded context
-│   │       ├── Memoly.Modules.{Name}.Domain/
-│   │       ├── Memoly.Modules.{Name}.Application/
-│   │       ├── Memoly.Modules.{Name}.Infrastructure/
-│   │       ├── Memoly.Modules.{Name}.Presentation/
-│   │       └── Memoly.Modules.{Name}.IntegrationEvents/  # Public contracts only (no dependencies)
 │   │
 │   └── Frontend/
 │       └── memoly-web/                        # React + Vite SPA (Phase 1 client)
 │
 ├── test/
-│   ├── Memoly.ArchitectureTests/              # Cross-cutting architecture rules (module isolation)
-│   ├── Memoly.IntegrationTests/               # End-to-end tests spanning multiple modules
-│   └── {ModuleName}/test/
-│       ├── Memoly.Modules.{Name}.ArchitectureTests/
-│       ├── Memoly.Modules.{Name}.IntegrationTests/
-│       └── Memoly.Modules.{Name}.UnitTests/
+│   ├── Memoly.ArchitectureTests/              # Architecture rules (slice isolation, Shared purity)
+│   ├── Memoly.IntegrationTests/               # WebApplicationFactory + Testcontainers (Postgres)
+│   └── Memoly.UnitTests/                      # Handler and domain-logic unit tests
 │
 ├── specs/
 │   └── ###-feature-name/
@@ -93,76 +85,67 @@ Memoly/
 └── docs/
 ```
 
-### Project Dependencies Per Module
+### Inside the Application — Vertical Slice Architecture
+
+The application is **one project** organized by feature, not by layer:
+
+- **Feature slices** — `Features/{Feature}/{Slice}/` folders. A slice is one vertical cut of one operation: endpoint (`MapGroup` + `MapGet`/`MapPost`), Wolverine handler, FluentValidation validator, and DTOs. A slice owns its code — nothing outside it references the slice's internals.
+- **Feature folder** — `Features/{Feature}/` groups its slices, the feature's EF Core configuration, and its `{Feature}Endpoints.cs` route group.
+- **Shared building blocks** — `Shared/`: the single `MemolyDbContext` + migrations, media storage helpers, auth setup, Result/presentation helpers. No business logic.
+- **No layer projects** — no Domain/Application/Infrastructure split; each slice carries everything it needs from endpoint to EF Core configuration.
+
+Example feature layout:
 
 ```
-                        ┌──────────────────────┐
-                        │  .IntegrationEvents   │  ← Public contracts only (no dependencies)
-                        └──────────┬───────────┘
-                                   │ referenced by other modules
-      ┌────────────────────────────┼──────────────────────────────┐
-      ▼                            ▼                              ▼
-┌──────────────┐  ┌──────────────────┐  ┌────────────────────────┐
-│  .Domain      │  │  .Application    │  │  .Presentation         │
-│              │◄─┤                  │◄─┤                        │
-│ Common.Domain│  │ Common.App       │  │ Common.Presentation    │
-└──────┬───────┘  └───────┬──────────┘  └────────────────────────┘
-       │                  │
-       │          ┌───────▼──────────┐
-       └─────────►│  .Infrastructure │
-                  │ Common.Infra     │
-                  └──────────────────┘
+Features/Memories/
+├── CreateMemory/
+│   ├── CreateMemoryEndpoint.cs        # MapPost("/api/memories"), maps Result → IResult
+│   ├── CreateMemoryHandler.cs         # Wolverine command handler
+│   ├── CreateMemoryValidator.cs       # FluentValidation rules
+│   └── CreateMemoryRequest.cs         # Request/response DTOs
+├── GetMemory/
+├── ListMemories/
+├── MemoryConfiguration.cs             # EF Core IEntityTypeConfiguration for the feature's entities
+└── MemoriesEndpoints.cs               # Maps the feature's route group: MapMemoriesEndpoints(app)
 ```
 
-- **Domain** → `Common.Domain` only
-- **Application** → `Domain` + `Common.Application`
-- **Infrastructure** → `Application` + `Domain` + `Common.Infrastructure`
-- **Presentation** → `Application` + `Common.Presentation`
-- **IntegrationEvents** → no project references (pure POCO contracts)
+### Slice Isolation Rules
 
-### Module Isolation Rules
+- Slices never reference each other — no cross-slice handler calls, no shared query services between slices.
+- Any slice may **read** any table through the shared `MemolyDbContext`; each feature's EF Core configuration and write paths stay in the feature that owns the entity.
+- Cross-feature **side effects** go through Wolverine events (e.g., `MemoryDeleted` → media cleanup handler deletes the files) — never by writing to another feature's tables directly.
+- Code needed by multiple slices moves to `Shared/` — and `Shared/` stays free of business logic.
+- Feature folders are `internal` to `Memoly.Api`; test projects get access via `InternalsVisibleTo`.
 
-- Module internal types are `internal` by default. Only `.IntegrationEvents` exposes public contracts.
-- No module references another module's Domain, Application, or Infrastructure projects — only `.IntegrationEvents`.
-- Each module has its own `DbContext` (own schema via `modelBuilder.HasDefaultSchema("modulename")`), owned by its Infrastructure project. Contexts are registered with `AddDbContextWithWolverineIntegration` and carry the Wolverine inbox/outbox tables so integration events commit with the data.
-- Modules communicate exclusively through integration events — no direct cross-module DB queries.
-- Common kernel contains zero business logic (only building blocks: Result types, event bus abstractions, presentation helpers).
+### Composition Root (Program.cs)
 
-### Module Registration (Composition Root)
-
-Each module exposes extension methods via its Presentation project. The API host never touches module internals:
+The API host wires everything: shared services, Wolverine, EF Core, auth. Handlers are discovered automatically from the application assembly — no per-module registration:
 
 ```csharp
-// Presentation: {Name}Module.cs — public extension methods
-public static IServiceCollection Add{Name}Module(this IServiceCollection services, IConfiguration configuration);
-public static IEndpointRouteBuilder Map{Name}Module(this IEndpointRouteBuilder app);
+// Shared/DependencyInjection.cs — internal registrations
+internal static IServiceCollection AddMemoly(this IServiceCollection services, IConfiguration configuration);
 
-// Infrastructure: DependencyInjection.cs — internal service registrations
-internal static IServiceCollection Add{Name}Infrastructure(this IServiceCollection services, IConfiguration configuration);
-
-// API: Program.cs — thin wiring
-builder.Services.Add{Name}Module(builder.Configuration);
-app.Map{Name}Module();
-```
-
-Wolverine is wired once at the API host — RabbitMQ transport, EF Core transactional outbox, auto-applied transactions. Each module's handlers are discovered by including its Presentation assembly:
-
-```csharp
-// API: Program.cs — Wolverine wiring alongside module registration
+// Memoly.Api: Program.cs — thin wiring
+builder.Services.AddMemoly(builder.Configuration);
 builder.Host.UseWolverine(opts =>
 {
-    opts.Discovery.IncludeAssembly(typeof({Name}Module).Assembly);  // repeat per module
-    opts.UseRabbitMq(rabbit => rabbit.HostName = builder.Configuration["RabbitMq:Host"]!)
-        .AutoProvision();                     // dev convenience — auto-create topology
-    opts.Policies.AutoApplyTransactions();    // entities + outbox messages commit atomically
+    opts.UseEntityFrameworkCoreTransactions();
+    opts.Policies.AutoApplyTransactions();    // entities + durable messages commit atomically
 });
+
+var app = builder.Build();
+app.MapMemoriesEndpoints();                  // one line per feature group
+app.MapSharingEndpoints();
+app.Run();
 ```
+
+Wolverine runs **in-process** — no message broker. Events are published as cascading return values or via `IMessageBus`; events whose side effects must survive a crash (e.g., media cleanup) use EF Core durable messaging so the message commits with the data.
 
 ### Media Handling
 
 Photos, videos, and audio recordings are large binary content and need explicit treatment:
 
-- Media files are stored on the server filesystem under a configurable root (Options pattern), owned by the module that owns the content — never as byte columns in the database; the DB keeps metadata + file references.
+- Media files are stored on the server filesystem under a configurable root (Options pattern, helpers in `Shared/Media/`) — never as byte columns in the database; the DB keeps metadata + file references.
 - Uploads and downloads stream: multipart streaming in, range-request-capable endpoints out (needed for audio/video seeking). Never load a whole media file into memory.
 - Deleting a memory must delete its media files (event-driven cleanup).
 - The SPA records audio with `MediaRecorder` and uploads the blob; playback streams from the API.
@@ -184,16 +167,15 @@ Any memory can be published as a public, read-only link — a way to show one mo
 
 - **Runtime**: .NET 10, C# 14
 - **Orchestration**: .NET Aspire (AppHost + ServiceDefaults in `src/Aspire/`)
-- **Reverse Proxy**: Traefik
 - **API**: ASP.NET Core Minimal APIs with OpenAPI
-- **ORM**: EF Core with code-first migrations (schema-per-module)
+- **ORM**: EF Core with code-first migrations (single `MemolyDbContext`)
 - **API Docs**: Scalar
 - **Logging**: Serilog (two-stage bootstrap, structured logging) + Seq
 - **Resilience**: Polly v8 pipelines
-- **Messaging & CQRS**: Wolverine — one library for the command bus and integration events (replaces MediatR + MassTransit); RabbitMQ transport, transactional outbox with EF Core
+- **CQRS & events**: Wolverine — in-process command bus and event handling (replaces MediatR + MassTransit); EF Core durable messaging so events commit with the data; no message broker
 - **Validation**: FluentValidation
 - **Mapping**: Mapster
-- **Authentication**: OpenIddict (secures a single-user deployment — no sign-up flow, no multi-tenancy)
+- **Authentication**: Keycloak (OIDC identity provider, run as a container in dev; single realm, single user — no sign-up flow, no multi-tenancy)
 - **Testing**: xUnit v3, Fluent Assertions, Moq, WebApplicationFactory, Testcontainers
 - **Code Quality**: SonarQube
 - **Solution format**: `.slnx`
@@ -224,10 +206,10 @@ npm install                           # Install dependencies
 npm run dev                           # Start dev server (proxies /api to Aspire)
 npm run generate-api                  # Auto-generate API client from OpenAPI spec
 
-# EF Core migrations (run from the module's Infrastructure project)
-dotnet ef migrations add InitialCreate --context {Module}DbContext \
-  --output-dir Database/Migrations \
-  --project src/Modules/{ModuleName}/Memoly.Modules.{Name}.Infrastructure
+# EF Core migrations
+dotnet ef migrations add InitialCreate --context MemolyDbContext \
+  --output-dir Shared/Database/Migrations \
+  --project src/API/Memoly.Api
 ```
 
 ## Development Workflow
@@ -244,19 +226,18 @@ dotnet ef migrations add InitialCreate --context {Module}DbContext \
 - Result pattern for domain/application layer errors; ProblemDetails (RFC 9457) for API responses
 - Options pattern (`IOptions<T>` / `IOptionsSnapshot<T>`) for configuration
 - Async/await with `CancellationToken` propagation end-to-end
-- Integration events are `sealed record` types implementing `IIntegrationEvent`
-- Wolverine handler conventions: plain `Handle`/`HandleAsync` methods (no mediator interfaces), events published as cascading return values or via `IMessageBus` — always through the transactional outbox, never fire-and-forget
+- Domain events are `sealed record` types
+- Wolverine handler conventions: plain `Handle`/`HandleAsync` methods (no mediator interfaces), events published as cascading return values or via `IMessageBus` — never fire-and-forget; events with side effects that must survive a crash go through EF Core durable messaging
 - Accessibility is a feature: keyboard navigation, focus states, reduced-motion variants, dark mode — every SPA screen; responsive from phone width up
 
-## Adding a New Module
+## Adding a New Feature
 
-1. Create 5 projects under `src/Modules/{Name}/` following the naming convention `Memoly.Modules.{Name}.{Layer}`
-2. Set project references following the dependency diagram above
-3. Create test projects (ArchitectureTests, IntegrationTests, UnitTests)
-4. Add internal `DbContext` in Infrastructure with own schema (`HasDefaultSchema`)
-5. Create public extension methods in Presentation (`Add{Name}Module`, `Map{Name}Module`)
-6. Register in API host `Program.cs`
-7. Add feature folder in `src/Frontend/memoly-web/src/features/{name}/` with components, hooks, and api subfolders
+1. Create `Features/{Feature}/{Slice}/` folders — one per operation: endpoint, Wolverine handler, validator, DTOs
+2. Add the feature's EF Core configuration (`IEntityTypeConfiguration`) and apply it in `MemolyDbContext`; add a migration if the schema changed
+3. Add `{Feature}Endpoints.cs` with the feature's `MapGroup`, and map it in `Program.cs`
+4. Any cross-feature reaction is a Wolverine event handled in the reacting feature
+5. Add tests (unit for handlers/domain logic, integration for endpoints)
+6. Add feature folder in `src/Frontend/memoly-web/src/features/{name}/` with components, hooks, and api subfolders
 
 ## Specify Integration
 
