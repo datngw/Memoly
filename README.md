@@ -33,9 +33,7 @@ I didn't want a social network, and I didn't want another cloud folder. I wanted
 
 **Vertical Slice Architecture** — a single .NET application organized by feature slices (endpoint, handler, validator, EF Core configuration) over a shared `MemolyDbContext`, with Wolverine as the in-process command bus.
 
-![Memoly system architecture](docs/architecture.png)
-
-Diagram source: [architecture.excalidraw](docs/architecture.excalidraw).
+![Memoly system architecture](docs/architecture.png?v=2)
 
 ## Tech Stack
 
