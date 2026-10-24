@@ -1,3 +1,5 @@
+using Memoly.Api.Shared.Database;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -25,6 +27,9 @@ try
     });
 
     builder.Services.AddOpenApi();
+
+    builder.Services.AddDbContext<MemolyDbContext>(o =>
+        o.UseNpgsql(builder.Configuration.GetConnectionString("memoly")));
 
     var app = builder.Build();
 
