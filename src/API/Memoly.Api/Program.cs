@@ -1,5 +1,6 @@
 using Memoly.Api.Features.System;
 using Memoly.Api.Shared;
+using Memoly.Api.Shared.Auth;
 using Memoly.Api.Shared.Database;
 using Memoly.Api.Shared.Presentation;
 using Microsoft.EntityFrameworkCore;
@@ -21,15 +22,19 @@ try
 
     builder.AddServiceDefaults();
 
-    builder.Host.UseSerilog((ctx, _, lc) =>
-    {
-        lc.ReadFrom.Configuration(ctx.Configuration)
-            .WriteTo.Console();
-        if (ctx.Configuration.GetConnectionString("seq") is { } seqUrl)
+    // preserveStaticLogger: each host (app or WebApplicationFactory in tests) builds its
+    // own logger; the shared static reloadable logger cannot be frozen twice.
+    builder.Host.UseSerilog(
+        (ctx, _, lc) =>
         {
-            lc.WriteTo.Seq(seqUrl);
-        }
-    });
+            lc.ReadFrom.Configuration(ctx.Configuration)
+                .WriteTo.Console();
+            if (ctx.Configuration.GetConnectionString("seq") is { } seqUrl)
+            {
+                lc.WriteTo.Seq(seqUrl);
+            }
+        },
+        preserveStaticLogger: true);
 
     builder.Host.UseWolverine(opts =>
     {
@@ -45,6 +50,7 @@ try
     });
 
     builder.Services.AddMemoly(builder.Configuration);
+    builder.Services.AddMemolyAuthentication(builder.Configuration);
     builder.Services.AddOpenApi();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
@@ -53,6 +59,8 @@ try
 
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
+    app.UseAuthentication();
+    app.UseAuthorization();
     app.MapDefaultEndpoints();
     app.MapOpenApi().AllowAnonymous();
     app.MapScalarApiReference().AllowAnonymous();
