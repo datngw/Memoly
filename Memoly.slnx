@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/Memoly.ServiceDefaults/Memoly.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>

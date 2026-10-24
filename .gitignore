@@ -1,0 +1,22 @@
+# Superpowers planning artifacts stay local, never committed
+docs/superpowers/plans/
+
+# Agent workspaces
+.superpowers/
+
+# Build outputs
+bin/
+obj/
+dist/
+TestResults/
+
+# IDE / tooling
+.vs/
+.idea/
+*.user
+.aspire/
+.env
+
+# Local data
+seq-data/
+node_modules/
