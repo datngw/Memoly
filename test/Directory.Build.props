@@ -1,4 +1,6 @@
 <Project>
+  <!-- Chain to the root Directory.Build.props; MSBuild only uses the nearest one. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>

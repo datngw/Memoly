@@ -6,4 +6,7 @@
   <Folder Name="/src/Aspire/">
     <Project Path="src/Aspire/Memoly.ServiceDefaults/Memoly.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Memoly.UnitTests/Memoly.UnitTests.csproj" />
+  </Folder>
 </Solution>
