@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/API/">
+    <Project Path="src/API/Memoly.Api/Memoly.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/Memoly.AppHost/Memoly.AppHost.csproj" />
+    <Project Path="src/Aspire/Memoly.ServiceDefaults/Memoly.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Memoly.ArchitectureTests/Memoly.ArchitectureTests.csproj" />
+    <Project Path="test/Memoly.IntegrationTests/Memoly.IntegrationTests.csproj" />
+    <Project Path="test/Memoly.UnitTests/Memoly.UnitTests.csproj" />
+  </Folder>
+</Solution>
