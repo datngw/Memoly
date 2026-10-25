@@ -17,6 +17,11 @@
     {
       "username": "memoly",
       "enabled": true,
+      "email": "memoly@memoly.local",
+      "emailVerified": true,
+      "firstName": "Memoly",
+      "lastName": "User",
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",

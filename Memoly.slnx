@@ -4,6 +4,7 @@
     <Project Path="src/API/Memoly.Api/Memoly.Api.csproj" />
   </Folder>
   <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/Memoly.AppHost/Memoly.AppHost.csproj" />
     <Project Path="src/Aspire/Memoly.ServiceDefaults/Memoly.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/test/">

@@ -47,10 +47,14 @@ try
 
         opts.UseEntityFrameworkCoreTransactions();
         opts.Policies.AutoApplyTransactions();
+
+        // Provisions the Wolverine envelope tables (and application tables) at startup
+        // against the live database — dev-time convenience owned by Weasel.
+        opts.UseEntityFrameworkCoreWolverineManagedMigrations();
     });
 
     builder.Services.AddMemoly(builder.Configuration);
-    builder.Services.AddMemolyAuthentication(builder.Configuration);
+    builder.Services.AddMemolyAuthentication(builder.Configuration, builder.Environment);
     builder.Services.AddOpenApi();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
