@@ -68,10 +68,10 @@ I didn't want a social network, and I didn't want another cloud folder. I wanted
 
 ## Getting Started
 
-> The project has not been scaffolded yet.
+Prerequisites: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), Node.js 24 (via [nvm](https://github.com/nvm-sh/nvm)), and a container runtime (Docker or Podman) for the Aspire-hosted Postgres, Keycloak, and Seq containers.
 
 ```bash
-# Backend (via Aspire — starts API + all containers)
+# Backend (via Aspire — starts API + Postgres + Keycloak + Seq)
 dotnet run --project src/Aspire/Memoly.AppHost
 
 # Frontend
@@ -79,6 +79,11 @@ cd src/Frontend/memoly-web
 npm install
 npm run dev
 ```
+
+- API: `http://localhost:7100` (Scalar docs at `/scalar`, health at `/health`)
+- SPA: `http://localhost:5173` (proxies `/api` to the API)
+- Keycloak dev login: user `memoly` / password `memoly`
+- Tests: `dotnet test` (integration tests start a throwaway Postgres via Testcontainers)
 
 ## License
 

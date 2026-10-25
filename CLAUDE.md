@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Memoly is a greenfield project. The codebase has not been scaffolded yet — no `.slnx`, `.csproj`, or source files exist. Governance is defined in `.specify/memory/constitution.md`.
+The solution skeleton is scaffolded (branch `001-project-scaffold`): solution root, Memoly.Api with the Shared building blocks (Domain, Presentation, Database, Auth), a walking-skeleton `Features/System/Ping` slice, Aspire AppHost (Postgres + Keycloak + Seq), three test projects, and the Vite SPA shell. No product features are implemented yet — the Memories/Collections/Sharing/Backup feature folders arrive with their first slices. Governance is referenced at `.specify/memory/constitution.md`, which does not exist yet.
 
 **Phase plan**:
 
