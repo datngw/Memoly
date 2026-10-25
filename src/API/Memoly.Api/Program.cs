@@ -48,8 +48,9 @@ try
         opts.UseEntityFrameworkCoreTransactions();
         opts.Policies.AutoApplyTransactions();
 
-        // Provisions the Wolverine envelope tables (and application tables) at startup
-        // against the live database — dev-time convenience owned by Weasel.
+        // Lets Wolverine provision its envelope tables at startup (Weasel, dev convenience).
+        // Inert while no durable messaging exists — the first feature that publishes a
+        // durable event must verify the tables exist and a round-trip delivers (see CLAUDE.md).
         opts.UseEntityFrameworkCoreWolverineManagedMigrations();
     });
 

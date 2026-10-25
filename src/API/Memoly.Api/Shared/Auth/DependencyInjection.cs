@@ -25,22 +25,27 @@ internal static class DependencyInjection
             ? $"{baseUrl.TrimEnd('/')}/realms/memoly"
             : configuration["Authentication:Keycloak:Authority"];
 
+        var isDevelopment = environment.IsDevelopment();
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.Authority = authority;
-                options.RequireHttpsMetadata = false; // dev is HTTP-only behind the Aspire proxy; revisit before production
-                options.TokenValidationParameters.ValidateAudience = false; // harden when the SPA login flow lands
-                if (environment.IsDevelopment())
+                if (isDevelopment)
                 {
-                    // The Aspire DCP proxy terminates TLS with a self-signed certificate;
-                    // trust it for OIDC metadata retrieval in development only.
+                    // Dev relaxations, Development-gated so they cannot ship: plain HTTP behind
+                    // the Aspire DCP proxy (which also terminates TLS with a self-signed cert,
+                    // trusted below), and no audience check until the SPA login flow defines one.
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters.ValidateAudience = false;
                     options.BackchannelHttpHandler = new HttpClientHandler
                     {
                         ServerCertificateCustomValidationCallback = (_, _, _, _) => true,
                     };
                 }
+                // Outside Development: defaults require HTTPS metadata and audience validation,
+                // failing closed until a production identity setup is configured.
             });
 
         services.AddAuthorization(options =>

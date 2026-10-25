@@ -217,6 +217,7 @@ dotnet ef migrations add InitialCreate --context MemolyDbContext \
 - Feature branches: `###-feature-name` (sequential numbering)
 - Feature specs live in `/specs/###-feature-name/`
 - TDD cycle: Write tests → User approves → Verify tests fail → Implement → Verify tests pass → Refactor
+- First feature that publishes a durable Wolverine event must, as an acceptance test, verify the envelope tables exist after startup (`wolverine_incoming/outgoing_envelopes`) and that one event round-trips — the scaffold's runtime provisioning (`UseEntityFrameworkCoreWolverineManagedMigrations`) is wired but unexercised
 - `TreatWarningsAsErrors` enabled for production code
 - Test naming: `Method_Scenario_ExpectedResult`
 
